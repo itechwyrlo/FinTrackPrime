@@ -1,0 +1,248 @@
+/* ============================================================
+   FinTrack Prime — brand stylesheet
+   Custom CSS exists only where Bootstrap utilities can't reach:
+   design tokens, brand typography, the hero, and gold buttons.
+   ============================================================ */
+
+/* ---------- 1. Design tokens ---------- */
+:root {
+  --ft-blue:      #004B87;
+  --ft-gold:      #C5A059;
+  --ft-gold-dark: #AD8A45;  /* hover shade derived from the gold */
+  --ft-gold-ink:  #8A6C31;  /* gold darkened for text on light backgrounds (WCAG) */
+  --ft-navy:      #111827;
+  --ft-off-white: #F3F4F6;
+  --ft-white:     #FFFFFF;
+
+  --ft-font-display: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --ft-font-body:    "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------- 2. Base ---------- */
+body {
+  font-family: var(--ft-font-body);
+  background-color: var(--ft-off-white);
+  color: var(--ft-navy);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Anchor targets land below the sticky navbar */
+#catalog { scroll-margin-top: 4.5rem; }
+
+/* ---------- 3. Brand typography ---------- */
+.ft-display {
+  font-family: var(--ft-font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.ft-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ft-gold-ink);
+}
+
+/* On the dark hero the full gold has enough contrast */
+.ft-hero .ft-eyebrow { color: var(--ft-gold); }
+
+/* ---------- 4. Navbar ---------- */
+.ft-navbar {
+  background-color: var(--ft-navy);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+}
+
+.ft-brand {
+  font-family: var(--ft-font-display);
+  font-size: 1.35rem;
+  color: var(--ft-white);
+}
+
+.ft-brand-accent { color: var(--ft-gold); }
+
+.ft-badge {
+  background-color: var(--ft-gold);
+  color: var(--ft-navy);
+  font-weight: 600;
+}
+
+/* ---------- 5. Hero ---------- */
+.ft-hero {
+  background-color: var(--ft-navy);
+  background-image: linear-gradient(155deg, #111827 45%, #0B2E4F 100%);
+  color: var(--ft-white);
+  padding-block: 4rem;
+}
+
+@media (min-width: 992px) {
+  .ft-hero { padding-block: 7rem; }
+}
+
+.ft-hero-title {
+  font-size: clamp(2rem, 4.5vw + 1rem, 3.4rem);
+}
+
+.ft-hero-lead {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 56ch;
+}
+
+@media (min-width: 992px) {
+  .ft-hero-lead { font-size: 1.15rem; }
+}
+
+/* Guilloché rosette — anchored off the right edge; the hero's
+   overflow-hidden clips it so it never causes horizontal scroll */
+.ft-guilloche {
+  position: absolute;
+  top: 50%;
+  right: -230px;
+  width: 480px;
+  height: 480px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 992px) {
+  .ft-guilloche {
+    right: -120px;
+    width: 640px;
+    height: 640px;
+  }
+}
+
+/* ---------- 6. Gold button (Bootstrap 5.3 button CSS-variable API) ---------- */
+.btn-ft-gold {
+  --bs-btn-color: var(--ft-navy);
+  --bs-btn-bg: var(--ft-gold);
+  --bs-btn-border-color: var(--ft-gold);
+  --bs-btn-hover-color: var(--ft-navy);
+  --bs-btn-hover-bg: var(--ft-gold-dark);
+  --bs-btn-hover-border-color: var(--ft-gold-dark);
+  --bs-btn-active-color: var(--ft-navy);
+  --bs-btn-active-bg: var(--ft-gold-dark);
+  --bs-btn-active-border-color: var(--ft-gold-dark);
+  --bs-btn-focus-shadow-rgb: 197, 160, 89;
+  font-weight: 600;
+}
+
+/* Outline companion to the gold button — used for download links */
+.btn-ft-outline {
+  --bs-btn-color: var(--ft-blue);
+  --bs-btn-border-color: var(--ft-blue);
+  --bs-btn-hover-color: var(--ft-white);
+  --bs-btn-hover-bg: var(--ft-blue);
+  --bs-btn-hover-border-color: var(--ft-blue);
+  --bs-btn-active-color: var(--ft-white);
+  --bs-btn-active-bg: var(--ft-blue);
+  --bs-btn-active-border-color: var(--ft-blue);
+  --bs-btn-focus-shadow-rgb: 0, 75, 135;
+  font-weight: 600;
+}
+
+/* ---------- 7. Product cards ---------- */
+.ft-card {
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  overflow: hidden; /* keeps the square-cornered thumb inside the card radius */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ft-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .ft-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.12);
+  }
+}
+
+/* Product artwork: the gradient backs the photo while it lazy-loads */
+.ft-thumb {
+  background-color: var(--ft-navy);
+  background-image: linear-gradient(150deg, #111827 35%, #0B2E4F 100%);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+}
+
+.ft-thumb-img {
+  object-fit: cover;
+}
+
+.ft-price {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums; /* prices align like a ledger column */
+}
+
+/* ---------- 8. Cart offcanvas ---------- */
+
+/* Bootstrap's offcanvas is 400px wide by default; cap it to the viewport
+   so it can never overflow a 320px phone */
+#cart-offcanvas {
+  --bs-offcanvas-width: min(420px, 92vw);
+}
+
+.ft-cart-header {
+  background-color: var(--ft-navy);
+  color: var(--ft-white);
+  border-bottom: 1px solid rgba(197, 160, 89, 0.35);
+}
+
+/* Quantity stepper: roomy tap targets, ledger-aligned count */
+.ft-qty .btn { width: 2.4rem; }
+
+.ft-qty .input-group-text {
+  min-width: 2.6rem;
+  justify-content: center;
+  background-color: var(--ft-white);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Add-to-cart feedback: button flips to a navy "Added ✓" state briefly.
+   min-width keeps the label swap from shifting the card layout. */
+.ft-card .btn-ft-gold { min-width: 7.5rem; }
+
+.ft-btn-added {
+  --bs-btn-bg: var(--ft-blue);
+  --bs-btn-border-color: var(--ft-blue);
+  --bs-btn-color: var(--ft-white);
+  --bs-btn-hover-bg: var(--ft-blue);
+  --bs-btn-hover-border-color: var(--ft-blue);
+  --bs-btn-hover-color: var(--ft-white);
+  --bs-btn-active-bg: var(--ft-blue);
+  --bs-btn-active-border-color: var(--ft-blue);
+  --bs-btn-active-color: var(--ft-white);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ft-btn-added {
+    animation: ft-btn-pop 0.25s ease;
+  }
+
+  @keyframes ft-btn-pop {
+    50% { transform: scale(1.08); }
+  }
+}
+
+/* Badge pulse when an item is added */
+@media (prefers-reduced-motion: no-preference) {
+  .ft-badge-pulse {
+    animation: ft-badge-pulse 0.45s ease-out;
+  }
+
+  @keyframes ft-badge-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(197, 160, 89, 0.7); }
+    100% { box-shadow: 0 0 0 10px rgba(197, 160, 89, 0); }
+  }
+}
+
+/* ---------- 9. Footer ---------- */
+.ft-footer {
+  background-color: var(--ft-navy);
+  color: rgba(255, 255, 255, 0.72);
+}

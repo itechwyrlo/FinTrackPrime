@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Downloadable banking and financial planning templates built to private-banking standards.">
+  <title>FinTrack Prime — Banking &amp; Financial Planning Templates</title>
+
+  <!-- Favicon — SVG scales crisply at every size; Vite hashes it on build -->
+  <link rel="icon" type="image/svg+xml" href="/src/assets/favicon.svg">
+
+  <!-- Brand typefaces: Libre Caslon (display) + Public Sans (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- The site stylesheet (src/styles.css) is imported by src/app.js so
+       Vite bundles, minifies, and cache-busts it with the JS build. -->
+</head>
+<body>
+
+  <!-- ============================================================
+       SVG symbol library — the guilloché rosette (banknote-engraving
+       motif) is defined once here and reused via <use> in the hero
+       and on every product card.
+       ============================================================ -->
+  <svg class="d-none" aria-hidden="true" focusable="false">
+    <symbol id="ft-rosette" viewBox="0 0 600 600">
+      <g fill="none" stroke="#C5A059" stroke-width="1" stroke-opacity="0.18">
+        <ellipse cx="300" cy="300" rx="270" ry="80"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(15 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(30 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(45 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(60 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(75 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(90 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(105 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(120 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(135 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(150 300 300)"/>
+        <ellipse cx="300" cy="300" rx="270" ry="80" transform="rotate(165 300 300)"/>
+      </g>
+      <g fill="none" stroke="#C5A059" stroke-width="1" stroke-opacity="0.10">
+        <ellipse cx="300" cy="300" rx="180" ry="52" transform="rotate(8 300 300)"/>
+        <ellipse cx="300" cy="300" rx="180" ry="52" transform="rotate(53 300 300)"/>
+        <ellipse cx="300" cy="300" rx="180" ry="52" transform="rotate(98 300 300)"/>
+        <ellipse cx="300" cy="300" rx="180" ry="52" transform="rotate(143 300 300)"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <!-- ============================================================
+       Navbar — brand + cart button with live badge (wired in Phase 3)
+       ============================================================ -->
+  <!-- sticky-top sits on <header>, not the nav: position:sticky only works
+       within the parent's height, so a sticky child of a same-height
+       wrapper never sticks. -->
+  <header class="sticky-top">
+    <nav class="navbar ft-navbar" data-bs-theme="dark" aria-label="Main navigation">
+      <div class="container">
+        <a class="navbar-brand ft-brand" href="#">
+          FinTrack&nbsp;<span class="ft-brand-accent">Prime</span>
+        </a>
+
+        <button id="cart-button" type="button"
+                class="btn btn-outline-light position-relative"
+                data-bs-toggle="offcanvas" data-bs-target="#cart-offcanvas"
+                aria-controls="cart-offcanvas" aria-label="Open shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16"
+               fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13.5 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          <span class="d-none d-sm-inline ms-1">Cart</span>
+          <span id="cart-badge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill ft-badge">
+            <span id="cart-count">0</span><span class="visually-hidden"> items in cart</span>
+          </span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============================================================
+       Hero — dark navy banner with guilloché engraving motif
+       ============================================================ -->
+  <section class="ft-hero position-relative overflow-hidden" aria-labelledby="hero-heading">
+
+    <!-- Decorative guilloché rosette (defined once in the symbol library) -->
+    <svg class="ft-guilloche" viewBox="0 0 600 600" aria-hidden="true" focusable="false">
+      <use href="#ft-rosette"></use>
+    </svg>
+
+    <div class="container position-relative">
+      <div class="row">
+        <div class="col-12 col-lg-8 col-xl-7">
+          <p class="ft-eyebrow mb-3">Banking &amp; personal finance templates</p>
+          <h1 id="hero-heading" class="ft-display ft-hero-title text-white mb-3">
+            Bring private&#8209;banking discipline to your personal finances.
+          </h1>
+          <p class="ft-hero-lead mb-4">
+            Download professionally structured planners for budgeting, cash flow,
+            investing, and retirement — built to the standard of documents banks
+            use internally.
+          </p>
+          <a href="#catalog" class="btn btn-ft-gold btn-lg px-4">Browse templates</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Product catalog — rendered dynamically by app.js in Phase 2
+       ============================================================ -->
+  <main>
+    <section id="catalog" class="py-5">
+      <div class="container">
+        <p class="ft-eyebrow mb-2">Template library</p>
+        <h2 class="ft-display mb-4">Every document your money needs</h2>
+        <div id="product-grid" class="row g-4">
+          <!-- Product cards are injected here by app.js (Phase 2) -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       Footer
+       ============================================================ -->
+  <footer class="ft-footer py-4">
+    <div class="container d-flex flex-column flex-sm-row justify-content-between gap-2 small">
+      <span>© 2026 FinTrack Prime</span>
+      <span>Banking &amp; Personal Finance IT Solutions</span>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       Shopping cart — Bootstrap Offcanvas, slides in from the right.
+       Item list, subtotal, and footer are rendered by app.js.
+       ============================================================ -->
+  <aside class="offcanvas offcanvas-end" tabindex="-1" id="cart-offcanvas"
+         aria-labelledby="cart-title">
+    <div class="offcanvas-header ft-cart-header" data-bs-theme="dark">
+      <h2 class="offcanvas-title ft-display fs-4" id="cart-title">Your cart</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+      <!-- Checkout result messages live outside the footer so they stay
+           visible after a successful payment empties the cart -->
+      <div id="checkout-message"></div>
+      <p id="cart-empty" class="text-body-secondary text-center py-5 mb-0">
+        Your cart is empty. Browse the template library to get started.
+      </p>
+      <ul id="cart-items" class="list-group list-group-flush"></ul>
+      <div id="cart-footer" class="border-top pt-3 mt-auto d-none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-semibold">Subtotal</span>
+          <span id="cart-subtotal" class="ft-price fs-5">$0.00</span>
+        </div>
+        <p class="small text-body-secondary mb-3">Instant download after payment.</p>
+        <div id="paypal-button-container"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Screen-reader announcements for cart changes -->
+  <p id="cart-status" class="visually-hidden" role="status"></p>
+
+  <!-- Bootstrap JS bundle (Popper included) — needed for Offcanvas -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous"></script>
+
+  <!-- PayPal JS SDK — SANDBOX. The client-id is a public identifier (safe
+       in frontend code); the secret key never leaves PayPal's dashboard.
+       Swap client-id for the live one when going to production.
+       No integrity attribute on purpose: PayPal generates this script
+       dynamically per client-id and updates it continuously, so a pinned
+       SRI hash would break checkout on their next deploy. -->
+  <!-- disable-funding=card removes the inline card form; guests pay by
+       card inside PayPal's popup window instead. -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AQSxA3MEk-0UznxA7ozlZCz7l3Ci2voSDzLkg-5BDWeB84MXr9usa8lmJEzu8RMbgVhDyTj6M3_yutcC&currency=USD&intent=capture&disable-funding=card"></script>
+
+  <!-- Application entry point (ES module) — Vite resolves /src/app.js in
+       dev and rewrites this tag to the hashed bundle on build. -->
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
