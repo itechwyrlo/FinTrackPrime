@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Plus, X } from 'lucide-react'
 import { financialStatementApi } from '../api/financialStatement'
+import { useDecimalInput } from '../hooks/useDecimalInput'
 import type { AssetLineViewModel, LiabilityViewModel } from '../types/api'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -24,7 +25,8 @@ export function FinancialStatementPage() {
   })
 
   const [newLiabilityName, setNewLiabilityName] = useState('')
-  const [newLiabilityAmount, setNewLiabilityAmount] = useState('')
+  const [newLiabilityAmount, setNewLiabilityAmount] = useState(0)
+  const liabilityAmountInput = useDecimalInput({ value: newLiabilityAmount, onChange: setNewLiabilityAmount, decimals: 2 })
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['financial-statement'] })
 
@@ -32,7 +34,7 @@ export function FinancialStatementPage() {
     mutationFn: financialStatementApi.addLiability,
     onSuccess: () => {
       setNewLiabilityName('')
-      setNewLiabilityAmount('')
+      setNewLiabilityAmount(0)
       invalidate()
     },
   })
@@ -43,9 +45,8 @@ export function FinancialStatementPage() {
   })
 
   const handleAddLiability = () => {
-    const amount = Number(newLiabilityAmount)
-    if (!newLiabilityName.trim() || !Number.isFinite(amount) || amount <= 0) return
-    addMutation.mutate({ name: newLiabilityName.trim(), amount })
+    if (!newLiabilityName.trim() || newLiabilityAmount <= 0) return
+    addMutation.mutate({ name: newLiabilityName.trim(), amount: newLiabilityAmount })
   }
 
   if (isLoading || !data) {
@@ -135,16 +136,7 @@ export function FinancialStatementPage() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ft-gold-ink dark:text-ft-gold">Add a liability</p>
             <div className="flex flex-wrap items-end gap-3">
               <Input label="Name" value={newLiabilityName} onChange={(e) => setNewLiabilityName(e.target.value)} placeholder="Auto loan" className="w-36" />
-              <Input
-                label="Amount"
-                variant="currency"
-                type="number"
-                min={0}
-                value={newLiabilityAmount}
-                onChange={(e) => setNewLiabilityAmount(e.target.value)}
-                placeholder="0"
-                className="w-32"
-              />
+              <Input label="Amount" variant="currency" {...liabilityAmountInput} className="w-32" />
               <Button leadingIcon={<Plus className="h-4 w-4" />} onClick={handleAddLiability} isLoading={addMutation.isPending}>
                 Add liability
               </Button>

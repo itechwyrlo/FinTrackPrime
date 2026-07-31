@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { loanCalculatorApi } from '../api/loanCalculator'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
+import { useDecimalInput } from '../hooks/useDecimalInput'
 import type { LoanCalculationRequest } from '../types/api'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -42,6 +43,27 @@ export function LoanCalculatorPage() {
     setRequest((prev) => ({ ...prev, [field]: value }))
   }
 
+  const principalInput = useDecimalInput({
+    value: request.principalAmount,
+    onChange: (value) => updateField('principalAmount', value),
+    decimals: 2,
+  })
+  const rateInput = useDecimalInput({
+    value: request.annualInterestRatePercent,
+    onChange: (value) => updateField('annualInterestRatePercent', value),
+    decimals: 1,
+  })
+  const termInput = useDecimalInput({
+    value: request.termMonths,
+    onChange: (value) => updateField('termMonths', value),
+    decimals: 0,
+  })
+  const extraPaymentInput = useDecimalInput({
+    value: request.extraMonthlyPayment,
+    onChange: (value) => updateField('extraMonthlyPayment', value),
+    decimals: 2,
+  })
+
   const result = mutation.data
   const chartData = result?.schedule.map((row) => ({
     month: row.month,
@@ -57,39 +79,13 @@ export function LoanCalculatorPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card className="space-y-4">
-          <Input
-            label="Loan amount"
-            variant="currency"
-            type="number"
-            min={0}
-            value={request.principalAmount}
-            onChange={(e) => updateField('principalAmount', Number(e.target.value))}
-          />
-          <Input
-            label="Annual interest rate"
-            variant="percent"
-            type="number"
-            min={0}
-            max={100}
-            step={0.1}
-            value={request.annualInterestRatePercent}
-            onChange={(e) => updateField('annualInterestRatePercent', Number(e.target.value))}
-          />
-          <Input
-            label="Term (months)"
-            type="number"
-            min={1}
-            max={480}
-            value={request.termMonths}
-            onChange={(e) => updateField('termMonths', Number(e.target.value))}
-          />
+          <Input label="Loan amount" variant="currency" {...principalInput} />
+          <Input label="Annual interest rate" variant="percent" {...rateInput} />
+          <Input label="Term (months)" {...termInput} />
           <Input
             label="Extra monthly payment"
             variant="currency"
-            type="number"
-            min={0}
-            value={request.extraMonthlyPayment}
-            onChange={(e) => updateField('extraMonthlyPayment', Number(e.target.value))}
+            {...extraPaymentInput}
             helperText="Optional. See how much sooner extra payments pay off the loan."
           />
         </Card>

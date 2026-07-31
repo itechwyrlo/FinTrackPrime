@@ -16,3 +16,13 @@ export function parseAmountInput(raw: string): number {
 export function amountInputValue(amount: number): string {
   return amount === 0 ? '' : String(amount)
 }
+
+// Strips a raw keystroke buffer down to digits and at most one decimal
+// point, so typing "1..2-3" while a field is focused ends up "1.23"
+// instead of silently rejecting the whole keystroke.
+export function cleanDecimalDraft(raw: string): string {
+  const cleaned = raw.replace(/[^0-9.]/g, '')
+  const firstDot = cleaned.indexOf('.')
+  if (firstDot === -1) return cleaned
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
+}

@@ -4,6 +4,7 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recha
 import { Plus, X } from 'lucide-react'
 import { investmentTrackerApi } from '../api/investmentTracker'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
+import { useDecimalInput } from '../hooks/useDecimalInput'
 import type { InvestmentHoldingViewModel } from '../types/api'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -22,6 +23,26 @@ function formatCurrency(amount: number) {
 const ALLOCATION_COLORS = ['var(--color-chart-series-1)', 'var(--color-chart-series-2)', 'var(--color-chart-series-3)']
 const OTHER_COLOR = 'var(--color-chart-other)'
 const MAX_DIRECT_SLICES = 3
+
+// A column's `render` runs per row as a plain callback, not a mounted
+// component, so useDecimalInput (which holds focus/draft state) has
+// to live in a real component to satisfy the rules of hooks.
+function DecimalTableInput({
+  value,
+  onChange,
+  decimals,
+  ariaLabel,
+  className,
+}: {
+  value: number
+  onChange: (value: number) => void
+  decimals: number
+  ariaLabel: string
+  className: string
+}) {
+  const inputProps = useDecimalInput({ value, onChange, decimals })
+  return <input {...inputProps} aria-label={ariaLabel} className={className} />
+}
 
 export function InvestmentTrackerPage() {
   const queryClient = useQueryClient()
@@ -124,12 +145,11 @@ export function InvestmentTrackerPage() {
       header: 'Shares',
       priority: 'high',
       render: (h) => (
-        <input
-          type="number"
-          min={0}
-          step={0.0001}
+        <DecimalTableInput
           value={h.shares}
-          onChange={(e) => updateHoldingField(h.id, 'shares', Number(e.target.value))}
+          onChange={(value) => updateHoldingField(h.id, 'shares', value)}
+          decimals={4}
+          ariaLabel={`Shares of ${h.symbol}`}
           className="tabular-figure w-20 rounded-md border border-border-strong bg-surface px-2 py-1 text-text-primary outline-none focus:border-ft-blue"
         />
       ),
@@ -139,12 +159,11 @@ export function InvestmentTrackerPage() {
       header: 'Cost/share',
       priority: 'medium',
       render: (h) => (
-        <input
-          type="number"
-          min={0}
-          step={0.01}
+        <DecimalTableInput
           value={h.costBasisPerShare}
-          onChange={(e) => updateHoldingField(h.id, 'costBasisPerShare', Number(e.target.value))}
+          onChange={(value) => updateHoldingField(h.id, 'costBasisPerShare', value)}
+          decimals={2}
+          ariaLabel={`Cost per share for ${h.symbol}`}
           className="tabular-figure w-24 rounded-md border border-border-strong bg-surface px-2 py-1 text-text-primary outline-none focus:border-ft-blue"
         />
       ),
@@ -154,12 +173,11 @@ export function InvestmentTrackerPage() {
       header: 'Price/share',
       priority: 'medium',
       render: (h) => (
-        <input
-          type="number"
-          min={0}
-          step={0.01}
+        <DecimalTableInput
           value={h.currentPricePerShare}
-          onChange={(e) => updateHoldingField(h.id, 'currentPricePerShare', Number(e.target.value))}
+          onChange={(value) => updateHoldingField(h.id, 'currentPricePerShare', value)}
+          decimals={2}
+          ariaLabel={`Price per share for ${h.symbol}`}
           className="tabular-figure w-24 rounded-md border border-border-strong bg-surface px-2 py-1 text-text-primary outline-none focus:border-ft-blue"
         />
       ),
