@@ -89,7 +89,7 @@ export function LoginPage() {
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="mt-4 flex justify-center">
+      <div className="mt-4">
         <GoogleSignInButton onCredential={handleGoogleCredential} disabled={isSubmitting} />
       </div>
 

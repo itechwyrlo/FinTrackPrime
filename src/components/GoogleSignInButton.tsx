@@ -1,7 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGoogleIdentityScript } from '../hooks/useGoogleIdentityScript'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
+// GSI's renderButton only accepts a fixed pixel width (no 100%/auto), and
+// clamps it to this range itself — matching the clamp here avoids measuring
+// a width the button would silently ignore.
+const MIN_WIDTH = 200
+const MAX_WIDTH = 400
 
 export function GoogleSignInButton({
   onCredential,
@@ -11,7 +16,9 @@ export function GoogleSignInButton({
   disabled?: boolean
 }) {
   const status = useGoogleIdentityScript()
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
 
   // Ref, not a dependency: the callback closes over each render's state
   // (email/password/etc via the parent page), but re-running
@@ -19,8 +26,22 @@ export function GoogleSignInButton({
   const onCredentialRef = useRef(onCredential)
   onCredentialRef.current = onCredential
 
+  // Matches the button's width to its container (same as the Input/Button
+  // fields above it) instead of GSI's hardcoded default, and keeps it in
+  // sync if the layout's width changes (e.g. crossing a breakpoint).
   useEffect(() => {
-    if (status !== 'ready' || !window.google || !containerRef.current || !GOOGLE_CLIENT_ID) {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(Math.round(entry.contentRect.width))
+    })
+    observer.observe(wrapper)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (status !== 'ready' || !window.google || !containerRef.current || !GOOGLE_CLIENT_ID || !width) {
       return
     }
 
@@ -38,9 +59,9 @@ export function GoogleSignInButton({
       size: 'large',
       shape: 'rectangular',
       text: 'continue_with',
-      width: 320,
+      width: Math.min(Math.max(width, MIN_WIDTH), MAX_WIDTH),
     })
-  }, [status])
+  }, [status, width])
 
   if (!GOOGLE_CLIENT_ID) {
     return (
@@ -55,10 +76,12 @@ export function GoogleSignInButton({
   }
 
   return (
-    <div
-      ref={containerRef}
-      aria-disabled={disabled}
-      className={disabled ? 'pointer-events-none opacity-50' : undefined}
-    />
+    <div ref={wrapperRef} className="w-full">
+      <div
+        ref={containerRef}
+        aria-disabled={disabled}
+        className={disabled ? 'pointer-events-none opacity-50' : undefined}
+      />
+    </div>
   )
 }
