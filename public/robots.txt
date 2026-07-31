@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /budget-planner
+Disallow: /cash-flow
+Disallow: /loan-calculator
+Disallow: /investment-tracker
+Disallow: /retirement-planner
+Disallow: /financial-statement
+Disallow: /upgrade
