@@ -20,7 +20,7 @@ export function AuthLayout({
         </a>
 
         <p className="relative max-w-sm font-display text-3xl leading-tight">
-          Banking tools that work while you type, not after you download something.
+          Clarity for every account, budget, and goal — in one place.
         </p>
       </div>
 
