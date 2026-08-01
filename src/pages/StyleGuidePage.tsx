@@ -154,7 +154,7 @@ export function StyleGuidePage() {
             <Badge variant="neutral">Neutral</Badge>
             <Badge variant="gold">Premium</Badge>
             <Badge variant="good">Unlocked</Badge>
-            <Badge variant="warning">Unusual</Badge>
+            <Badge variant="warning">Warning</Badge>
             <Badge variant="critical">Overdue</Badge>
             <Avatar name="Samuel Reyes" size="sm" />
             <Avatar name="Ada Lovelace" size="md" />

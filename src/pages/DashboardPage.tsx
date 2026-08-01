@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Plus, Wallet } from 'lucide-react'
+import { Plus, Wallet } from 'lucide-react'
 import { dashboardApi } from '../api/dashboard'
 import type { AccountViewModel, TransactionViewModel } from '../types/api'
 import { StatCard } from '../components/ui/StatCard'
 import { Card, CardHeader } from '../components/ui/Card'
-import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SkeletonCard } from '../components/ui/Skeleton'
@@ -24,19 +23,12 @@ function TransactionRow({ transaction }: { transaction: TransactionViewModel }) 
   const isExpense = transaction.direction === 'Expense'
 
   return (
-    <li
-      className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
-        transaction.isFlaggedUnusual ? 'bg-status-warning/10' : ''
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        {transaction.isFlaggedUnusual && <Badge variant="warning">Unusual</Badge>}
-        <div>
-          <p className="font-medium text-text-primary">{transaction.description}</p>
-          <p className="text-xs text-text-muted">
-            {transaction.category} · {formatDate(transaction.occurredAtUtc)}
-          </p>
-        </div>
+    <li className="flex items-center justify-between rounded-md px-3 py-2 text-sm">
+      <div>
+        <p className="font-medium text-text-primary">{transaction.description}</p>
+        <p className="text-xs text-text-muted">
+          {transaction.category} · {formatDate(transaction.occurredAtUtc)}
+        </p>
       </div>
       <span className={`tabular-figure font-medium ${isExpense ? 'text-text-primary' : 'text-status-good'}`}>
         {isExpense ? '−' : '+'}
@@ -83,11 +75,7 @@ export function DashboardPage() {
   const summary = useMemo(() => {
     const accounts = data?.accounts ?? []
     const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0)
-    const unusualCount = accounts.reduce(
-      (sum, account) => sum + account.recentTransactions.filter((t) => t.isFlaggedUnusual).length,
-      0,
-    )
-    return { totalBalance, unusualCount }
+    return { totalBalance }
   }, [data])
 
   if (isLoading) {
@@ -95,7 +83,6 @@ export function DashboardPage() {
       <div>
         <div className="h-8 w-48 animate-pulse rounded bg-surface-sunken" />
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <StatCard label="" value="" isLoading />
           <StatCard label="" value="" isLoading />
         </div>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -118,14 +105,10 @@ export function DashboardPage() {
 
   return (
     <div>
-      <CardHeader
-        title="Your accounts"
-        description="A quick unusual-activity check runs on every visit, so anything out of pattern is flagged below."
-      />
+      <CardHeader title="Your accounts" description="Every account you own, balance, and recent activity." />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard label="Total balance" value={formatCurrency(summary.totalBalance)} icon={<Wallet className="h-4 w-4" />} />
-        <StatCard label="Unusual transactions" value={summary.unusualCount} icon={<AlertTriangle className="h-4 w-4" />} />
       </div>
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">

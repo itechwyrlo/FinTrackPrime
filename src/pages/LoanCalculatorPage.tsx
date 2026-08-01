@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { loanCalculatorApi } from '../api/loanCalculator'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
 import { useDecimalInput } from '../hooks/useDecimalInput'
-import type { LoanCalculationRequest } from '../types/api'
+import type { AffordabilityRating, LoanCalculationRequest } from '../types/api'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
 import { Card, CardHeader } from '../components/ui/Card'
+import { EmptyState } from '../components/ui/EmptyState'
 import { Input } from '../components/ui/Input'
 import { StatCard } from '../components/ui/StatCard'
 import { Spinner } from '../components/ui/Spinner'
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`
 }
 
 const DEFAULT_REQUEST: LoanCalculationRequest = {
@@ -21,7 +29,24 @@ const DEFAULT_REQUEST: LoanCalculationRequest = {
   extraMonthlyPayment: 0,
 }
 
+const RATING_BADGE_VARIANT: Record<AffordabilityRating, 'neutral' | 'good' | 'gold' | 'warning' | 'critical'> = {
+  Unknown: 'neutral',
+  Comfortable: 'good',
+  Manageable: 'gold',
+  Stretched: 'warning',
+  NotRecommended: 'critical',
+}
+
+const RATING_LABEL: Record<AffordabilityRating, string> = {
+  Unknown: 'Unknown',
+  Comfortable: 'Comfortable',
+  Manageable: 'Manageable',
+  Stretched: 'Stretched',
+  NotRecommended: 'Not recommended',
+}
+
 export function LoanCalculatorPage() {
+  const navigate = useNavigate()
   const [request, setRequest] = useState<LoanCalculationRequest>(DEFAULT_REQUEST)
 
   const mutation = useMutation({
@@ -38,6 +63,28 @@ export function LoanCalculatorPage() {
     runCalculation(request)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request])
+
+  const affordabilityMutation = useMutation({
+    mutationFn: loanCalculatorApi.checkAffordability,
+  })
+
+  const runAffordabilityCheck = useDebouncedCallback(
+    (req: { principalAmount: number; annualInterestRatePercent: number; termMonths: number }) => {
+      affordabilityMutation.mutate(req)
+    },
+    400,
+  )
+
+  // Mirrors the loan being calculated above, so affordability always reflects
+  // the same principal/rate/term the user is currently looking at.
+  useEffect(() => {
+    runAffordabilityCheck({
+      principalAmount: request.principalAmount,
+      annualInterestRatePercent: request.annualInterestRatePercent,
+      termMonths: request.termMonths,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request.principalAmount, request.annualInterestRatePercent, request.termMonths])
 
   const updateField = (field: keyof LoanCalculationRequest, value: number) => {
     setRequest((prev) => ({ ...prev, [field]: value }))
@@ -130,6 +177,54 @@ export function LoanCalculatorPage() {
                 </p>
               )}
             </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ft-gold-ink dark:text-ft-gold">
+                Can you afford this loan?
+              </h2>
+              {affordabilityMutation.data && (
+                <Badge variant={RATING_BADGE_VARIANT[affordabilityMutation.data.rating]}>
+                  {RATING_LABEL[affordabilityMutation.data.rating]}
+                </Badge>
+              )}
+            </div>
+
+            {!affordabilityMutation.data ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-text-muted">
+                <Spinner size="sm" /> Checking…
+              </p>
+            ) : affordabilityMutation.data.rating === 'Unknown' ? (
+              <div className="mt-3">
+                <EmptyState
+                  title="Add an income category to check affordability"
+                  description="We use your Budget Planner income categories to estimate whether this loan fits your budget."
+                  action={<Button onClick={() => navigate('/budget-planner')}>Go to Budget Planner</Button>}
+                />
+              </div>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <StatCard label="Proposed payment" value={formatCurrency(affordabilityMutation.data.proposedMonthlyPayment)} />
+                <StatCard label="Monthly income" value={formatCurrency(affordabilityMutation.data.monthlyIncome)} />
+                <StatCard
+                  label="Current debt-to-income"
+                  value={
+                    affordabilityMutation.data.currentDebtToIncomeRatioPercent === null
+                      ? '—'
+                      : formatPercent(affordabilityMutation.data.currentDebtToIncomeRatioPercent)
+                  }
+                />
+                <StatCard
+                  label="Projected debt-to-income"
+                  value={
+                    affordabilityMutation.data.projectedDebtToIncomeRatioPercent === null
+                      ? '—'
+                      : formatPercent(affordabilityMutation.data.projectedDebtToIncomeRatioPercent)
+                  }
+                />
+              </div>
+            )}
           </Card>
         </div>
       </div>

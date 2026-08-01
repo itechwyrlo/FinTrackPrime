@@ -38,8 +38,7 @@ React + TypeScript, built with Vite. Deploys to Vercel.
 - **Login** (`/login`) and **Register** (`/register`), split-panel
   layout, the guilloché motif on the dark side.
 - **Account dashboard** (`/dashboard`): every account the user owns,
-  balance, and recent transactions. Transactions flagged unusual by
-  the backend get a visible "Unusual" badge and a highlighted row.
+  balance, and recent transactions.
 - Route protection: `/dashboard` (and everything added after it)
   redirects to `/login` if there's no session. An expired/invalid
   token anywhere in the app triggers an automatic logout via the

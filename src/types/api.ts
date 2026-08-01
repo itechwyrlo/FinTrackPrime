@@ -37,7 +37,6 @@ export interface TransactionViewModel {
   amount: number
   direction: TransactionDirection
   occurredAtUtc: string
-  isFlaggedUnusual: boolean
 }
 
 export interface AccountViewModel {
@@ -146,6 +145,24 @@ export interface LoanCalculationResultViewModel {
   totalInterestPaid: number
   totalPaid: number
   schedule: AmortizationRowViewModel[]
+}
+
+export interface LoanAffordabilityRequest {
+  principalAmount: number
+  annualInterestRatePercent: number
+  termMonths: number
+}
+
+export type AffordabilityRating = 'Unknown' | 'Comfortable' | 'Manageable' | 'Stretched' | 'NotRecommended'
+
+export interface LoanAffordabilityResultViewModel {
+  proposedMonthlyPayment: number
+  monthlyIncome: number
+  existingMonthlyObligations: number
+  totalExistingLiabilities: number
+  currentDebtToIncomeRatioPercent: number | null
+  projectedDebtToIncomeRatioPercent: number | null
+  rating: AffordabilityRating
 }
 
 export interface InvestmentHoldingViewModel {
