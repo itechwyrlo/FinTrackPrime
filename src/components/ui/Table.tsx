@@ -7,7 +7,7 @@ export interface TableColumn<T> {
   key: string
   header: string
   render: (row: T) => ReactNode
-  /** high = always visible. medium = hidden below the tablet breakpoint. low = desktop-only. */
+  /** high = always visible. medium = hidden below the table's @lg container width. low = hidden below @2xl. */
   priority?: 'high' | 'medium' | 'low'
   align?: 'left' | 'right' | 'center'
 }
@@ -23,15 +23,18 @@ interface TableProps<T> {
 const ALIGN_CLASSES = { left: 'text-left', right: 'text-right', center: 'text-center' }
 
 function priorityClass(priority: TableColumn<unknown>['priority']) {
-  if (priority === 'low') return 'hidden lg:table-cell'
-  if (priority === 'medium') return 'hidden md:table-cell'
+  if (priority === 'low') return 'hidden @2xl:table-cell'
+  if (priority === 'medium') return 'hidden @lg:table-cell'
   return 'table-cell'
 }
 
 /**
- * Responsive data table: full table with sticky header on desktop, columns
- * drop by priority on tablet, and rows become stacked label/value cards on
- * mobile — each breakpoint's layout owned by this component, not the caller.
+ * Responsive data table: full table with sticky header when its container
+ * is wide enough, columns drop by priority as space tightens, and rows
+ * become stacked label/value cards when the container is narrow — driven by
+ * the table's own available width (via container queries), not the
+ * viewport, so this behaves correctly both on phones and inside narrow
+ * desktop layout columns (e.g. Financial Statement's 3-column grid).
  */
 export function Table<T>({ columns, data, keyExtractor, isLoading, emptyMessage = 'Nothing to show yet.' }: TableProps<T>) {
   if (isLoading) {
@@ -49,9 +52,10 @@ export function Table<T>({ columns, data, keyExtractor, isLoading, emptyMessage 
   }
 
   return (
-    <>
-      {/* Desktop / tablet: real table, sticky header, columns hidden by priority. */}
-      <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface-elevated md:block">
+    <div className="@container">
+      {/* Real table, sticky header, columns hidden by priority — shown once
+          this component's own container (not the viewport) has room. */}
+      <div className="hidden overflow-x-auto rounded-xl border border-border bg-surface-elevated @lg:block">
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-surface-elevated">
             <tr className="border-b border-border">
@@ -91,8 +95,8 @@ export function Table<T>({ columns, data, keyExtractor, isLoading, emptyMessage 
         </table>
       </div>
 
-      {/* Mobile: each row becomes a card of label/value pairs. */}
-      <ul className="space-y-3 md:hidden">
+      {/* Narrow container: each row becomes a card of label/value pairs. */}
+      <ul className="space-y-3 @lg:hidden">
         {data.map((row) => (
           <li key={keyExtractor(row)} className="rounded-xl border border-border bg-surface-elevated p-4">
             <dl className="space-y-2">
@@ -106,6 +110,6 @@ export function Table<T>({ columns, data, keyExtractor, isLoading, emptyMessage 
           </li>
         ))}
       </ul>
-    </>
+    </div>
   )
 }
