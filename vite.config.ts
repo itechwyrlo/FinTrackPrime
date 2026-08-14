@@ -77,10 +77,17 @@ export default defineConfig({
         // Precache the built app shell (JS/CSS/HTML/fonts) so the app
         // loads and navigates offline.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // A navigation that misses the precache while offline (e.g. a
-        // fresh deploy hasn't been cached yet) falls back to a static
-        // offline page instead of a browser error screen.
-        navigateFallback: '/offline.html',
+        // Workbox intercepts EVERY navigation whose exact URL isn't in the
+        // precache (which only holds the build's static files, not
+        // app routes) and serves this unconditionally -- it does not check
+        // real connectivity. It must be the SPA shell so deep-link/hard
+        // navigations (a hard refresh on /dashboard, Finverse's redirect
+        // back to /bank-link/callback?code=...) still boot the real app
+        // and let the router take over, instead of dead-ending on the
+        // static offline.html page while fully online. A genuine
+        // "actually offline" fallback would need a separate
+        // setCatchHandler bound to a real fetch failure, not this option.
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
