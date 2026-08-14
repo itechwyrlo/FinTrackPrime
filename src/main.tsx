@@ -6,7 +6,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/ui/Toast'
 import './index.css'
 import App from './App.tsx'
-
+ 
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
