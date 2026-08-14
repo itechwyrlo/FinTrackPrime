@@ -5,7 +5,7 @@ export const authApi = {
   register: async (request: RegisterRequest): Promise<AuthResponse> => {
     const { data } = await apiClient.post<AuthResponse>('/api/auth/register', request)
     return data
-  },
+  }, 
   login: async (request: LoginRequest): Promise<AuthResponse> => {
     const { data } = await apiClient.post<AuthResponse>('/api/auth/login', request)
     return data
