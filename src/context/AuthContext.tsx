@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { authApi } from '../api/auth'
 import { authSession, type AuthSession } from '../api/authSession'
 import type { AuthResponse } from '../types/api'
@@ -95,16 +95,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login, register, google, and premium verify all return the same
   // AuthResponse shape (including whether premium is unlocked), so all
   // four funnel through this one function.
-  const login = (response: AuthResponse) => {
+  //
+  // useCallback (empty deps — neither closes over any props/state) keeps
+  // these referentially stable across renders. Consumers like the PayPal
+  // checkout button depend on `login` to decide when to re-mount, and an
+  // unstable reference there re-mounts it on every unrelated AuthProvider
+  // render (e.g. the proactive token refresh below) — including possibly
+  // mid-checkout, which orphans the button DOM PayPal's popup is tracking.
+  const login = useCallback((response: AuthResponse) => {
     authSession.set(response)
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     // Best-effort: client-side state clears either way, so a network
     // failure here shouldn't leave the user stuck looking logged in.
     authApi.logout().catch(() => {})
     authSession.clear()
-  }
+  }, [])
 
   const user = toUser(session)
 
