@@ -7,7 +7,6 @@ import { usePayPalScript } from '../hooks/usePayPalScript'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Spinner } from '../components/ui/Spinner'
-import { Button } from '../components/ui/Button'
 
 // Must match Premium:PriceUsd / Premium:Currency in the backend's
 // appsettings.json — if that changes, this display value and the
