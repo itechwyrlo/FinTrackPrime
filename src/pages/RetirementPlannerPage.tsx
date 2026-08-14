@@ -4,9 +4,10 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { AlertTriangle } from 'lucide-react'
 import { retirementPlannerApi } from '../api/retirementPlanner'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
+import { useDecimalInput } from '../hooks/useDecimalInput'
 import type { RetirementPlanInputRequest, RetirementPlanViewModel } from '../types/api'
 import { Card, CardHeader } from '../components/ui/Card'
-import { Slider } from '../components/ui/Slider'
+import { Input } from '../components/ui/Input'
 import { StatCard } from '../components/ui/StatCard'
 import { SkeletonCard } from '../components/ui/Skeleton'
 
@@ -55,6 +56,35 @@ export function RetirementPlannerPage() {
     })
   }
 
+  // Hooks run unconditionally on every render (React's rules of hooks),
+  // so these fall back to 0 before `plan` loads — the loading branch
+  // below renders a skeleton instead of these inputs until then anyway.
+  const currentAgeInput = useDecimalInput({
+    value: plan?.currentAge ?? 0,
+    onChange: (value) => updateField('currentAge', value),
+    decimals: 0,
+  })
+  const retirementAgeInput = useDecimalInput({
+    value: plan?.retirementAge ?? 0,
+    onChange: (value) => updateField('retirementAge', value),
+    decimals: 0,
+  })
+  const currentSavingsInput = useDecimalInput({
+    value: plan?.currentSavings ?? 0,
+    onChange: (value) => updateField('currentSavings', value),
+    decimals: 2,
+  })
+  const monthlyContributionInput = useDecimalInput({
+    value: plan?.monthlyContribution ?? 0,
+    onChange: (value) => updateField('monthlyContribution', value),
+    decimals: 2,
+  })
+  const annualReturnInput = useDecimalInput({
+    value: plan?.annualReturnRatePercent ?? 0,
+    onChange: (value) => updateField('annualReturnRatePercent', value),
+    decimals: 1,
+  })
+
   if (isLoading || !plan) {
     return (
       <div>
@@ -69,53 +99,15 @@ export function RetirementPlannerPage() {
 
   return (
     <div>
-      <CardHeader title="Retirement Planner" description="Drag any slider. The projection redraws once you stop." />
+      <CardHeader title="Retirement Planner" description="Adjust any field. The projection redraws once you stop typing." />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card className="space-y-6">
-          <Slider
-            label="Current age"
-            value={plan.currentAge}
-            min={18}
-            max={80}
-            formatValue={(v) => `${v}`}
-            onValueChange={(v) => updateField('currentAge', v)}
-          />
-          <Slider
-            label="Retirement age"
-            value={plan.retirementAge}
-            min={19}
-            max={90}
-            formatValue={(v) => `${v}`}
-            onValueChange={(v) => updateField('retirementAge', v)}
-          />
-          <Slider
-            label="Current savings"
-            value={plan.currentSavings}
-            min={0}
-            max={500000}
-            step={1000}
-            formatValue={formatCurrency}
-            onValueChange={(v) => updateField('currentSavings', v)}
-          />
-          <Slider
-            label="Monthly contribution"
-            value={plan.monthlyContribution}
-            min={0}
-            max={5000}
-            step={50}
-            formatValue={formatCurrency}
-            onValueChange={(v) => updateField('monthlyContribution', v)}
-          />
-          <Slider
-            label="Expected annual return"
-            value={plan.annualReturnRatePercent}
-            min={0}
-            max={12}
-            step={0.5}
-            formatValue={(v) => `${v}%`}
-            onValueChange={(v) => updateField('annualReturnRatePercent', v)}
-          />
+        <Card className="space-y-4">
+          <Input label="Current age" {...currentAgeInput} />
+          <Input label="Retirement age" {...retirementAgeInput} />
+          <Input label="Current savings" variant="currency" {...currentSavingsInput} />
+          <Input label="Monthly contribution" variant="currency" {...monthlyContributionInput} />
+          <Input label="Expected annual return" variant="percent" {...annualReturnInput} />
           {error && (
             <p className="flex items-center gap-1.5 text-sm text-status-critical">
               <AlertTriangle className="h-4 w-4 shrink-0" />

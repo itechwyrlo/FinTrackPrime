@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { authApi } from '../api/auth'
 import { authSession, type AuthSession } from '../api/authSession'
-import type { AuthResponse, PremiumTool } from '../types/api'
+import type { AuthResponse } from '../types/api'
 
 interface AuthUser {
   fullName: string
   email: string
-  unlockedTools: PremiumTool[]
+  premiumUnlocked: boolean
 }
 
 interface AuthContextValue {
@@ -24,12 +24,19 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 function toUser(session: AuthSession | null): AuthUser | null {
   if (!session) return null
-  return { fullName: session.fullName, email: session.email, unlockedTools: session.unlockedTools }
+  return { fullName: session.fullName, email: session.email, premiumUnlocked: session.premiumUnlocked }
 }
 
 // Renew this long before actual expiry so a request in flight never
 // straddles the boundary and gets a spurious 401.
 const REFRESH_MARGIN_MS = 60_000
+
+// Routes reachable without a session, where there's no "already logged
+// in — redirect them elsewhere" decision to make, so the startup probe
+// below is skipped for these specifically. Every other route still needs
+// the answer before ProtectedRoute/RootRedirect can decide whether to
+// render or redirect.
+const GUEST_ONLY_ROUTES = ['/login', '/register']
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => authSession.get())
@@ -43,8 +50,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // The access token lives only in memory, so a fresh page load starts
   // with none. Silently trade the ftp_refresh cookie (if any) for a new
-  // access token before deciding whether the user is logged in.
+  // access token before deciding whether the user is logged in — except
+  // on a guest-only route, where nothing needs that answer yet.
+  //
+  // window.location.pathname (not useLocation) is deliberate: this only
+  // needs to check where the app *booted*, not react to later in-app
+  // navigation, so the effect keeps its original run-once-on-mount `[]`
+  // dependency array instead of re-firing a refresh call on every route
+  // change.
   useEffect(() => {
+    if (GUEST_ONLY_ROUTES.includes(window.location.pathname)) {
+      setIsInitializing(false)
+      return
+    }
+
     let cancelled = false
     authApi
       .refresh()
@@ -74,7 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.accessTokenExpiresAtUtc])
 
   // Login, register, google, and premium verify all return the same
-  // AuthResponse shape, so all four funnel through this one function.
+  // AuthResponse shape (including whether premium is unlocked), so all
+  // four funnel through this one function.
   const login = (response: AuthResponse) => {
     authSession.set(response)
   }

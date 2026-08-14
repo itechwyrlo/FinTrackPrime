@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { dashboardApi } from '../api/dashboard'
+import { useNotificationsHub } from '../hooks/useNotificationsHub'
 import { Sidebar } from './Sidebar'
 import { TopNav } from './TopNav'
 
@@ -25,6 +26,12 @@ export function AppLayout() {
   // account data even before the user visits /dashboard. React Query
   // dedupes this against DashboardPage's identical query key.
   const { data } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardApi.get })
+
+  // AppLayout only ever renders inside <ProtectedRoute>, per App.tsx's
+  // route tree, so reaching this component already implies
+  // isAuthenticated. The parameter exists so the hook itself stays
+  // testable/reusable independent of that routing guarantee.
+  useNotificationsHub(true)
 
   return (
     <div className="flex min-h-screen bg-surface">

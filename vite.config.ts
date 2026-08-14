@@ -1,11 +1,47 @@
-import { defineConfig } from 'vite'
+import fs from 'node:fs'
+import path from 'node:path'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Vite's dev server only falls back to index.html for requests that look
+// like a real page navigation (Accept: text/html). Finverse's Link UI
+// calls /bank-link/callback via a background fetch (Accept:
+// application/json, ...) as part of completing the link — without this,
+// that request 404s (no CORS header on the 404 reads as a blocked CORS
+// error in the browser) and the flow never gets a chance to redirect the
+// user here for real. This serves the SPA shell for that one path
+// regardless of Accept header, with CORS explicitly allowed, so
+// Finverse's background call succeeds the same way a real navigation
+// already does.
+function bankLinkCallbackFallback(): Plugin {
+  return {
+    name: 'bank-link-callback-fallback',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith('/bank-link/callback')) {
+          next()
+          return
+        }
+
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        const indexHtml = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8')
+        const transformed = await server.transformIndexHtml(req.url, indexHtml)
+        res.setHeader('Content-Type', 'text/html')
+        res.end(transformed)
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    cors: true,
+  },
   plugins: [
+    bankLinkCallbackFallback(),
     react(),
     tailwindcss(),
     VitePWA({

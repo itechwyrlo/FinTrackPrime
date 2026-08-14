@@ -2,7 +2,7 @@ import type { AuthResponse } from '../types/api'
 
 export type AuthSession = Pick<
   AuthResponse,
-  'token' | 'accessTokenExpiresAtUtc' | 'fullName' | 'email' | 'unlockedTools'
+  'token' | 'accessTokenExpiresAtUtc' | 'fullName' | 'email' | 'premiumUnlocked'
 >
 
 type Listener = (session: AuthSession | null) => void
@@ -23,7 +23,7 @@ export const authSession = {
       accessTokenExpiresAtUtc: next.accessTokenExpiresAtUtc,
       fullName: next.fullName,
       email: next.email,
-      unlockedTools: next.unlockedTools,
+      premiumUnlocked: next.premiumUnlocked,
     }
     listeners.forEach((listener) => listener(session))
     return session

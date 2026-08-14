@@ -4,9 +4,14 @@ import type {
   LoanAffordabilityResultViewModel,
   LoanCalculationRequest,
   LoanCalculationResultViewModel,
+  LoanRateViewModel,
 } from '../types/api'
 
 export const loanCalculatorApi = {
+  getRates: async (): Promise<LoanRateViewModel[]> => {
+    const { data } = await apiClient.get<LoanRateViewModel[]>('/api/loan-calculator/rates')
+    return data
+  },
   calculate: async (request: LoanCalculationRequest): Promise<LoanCalculationResultViewModel> => {
     const { data } = await apiClient.post<LoanCalculationResultViewModel>(
       '/api/loan-calculator/calculate',

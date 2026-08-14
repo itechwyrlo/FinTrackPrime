@@ -9,20 +9,23 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
-import type { PremiumTool } from '../types/api'
 
 export interface NavLeaf {
   type: 'link'
   to: string
   label: string
   icon: LucideIcon
-  premiumTool?: PremiumTool
 }
 
 export interface NavGroup {
   type: 'group'
   label: string
   items: NavItem[]
+  // Premium is a single all-tools purchase, so the whole group is
+  // gated together, not any one item inside it. While locked, the
+  // Sidebar collapses this group into one link to /upgrade instead of
+  // rendering its items.
+  premiumGated?: boolean
 }
 
 export type NavItem = NavLeaf | NavGroup
@@ -38,29 +41,12 @@ export const NAV_CONFIG: NavItem[] = [
   {
     type: 'group',
     label: 'Premium tools',
+    premiumGated: true,
     items: [
-      { type: 'link', to: '/loan-calculator', label: 'Loan Calculator', icon: Calculator, premiumTool: 'LoanCalculator' },
-      {
-        type: 'link',
-        to: '/investment-tracker',
-        label: 'Investment Tracker',
-        icon: LineChart,
-        premiumTool: 'InvestmentTracker',
-      },
-      {
-        type: 'link',
-        to: '/retirement-planner',
-        label: 'Retirement Planner',
-        icon: PiggyBank,
-        premiumTool: 'RetirementPlanner',
-      },
-      {
-        type: 'link',
-        to: '/financial-statement',
-        label: 'Financial Statement',
-        icon: FileText,
-        premiumTool: 'FinancialStatement',
-      },
+      { type: 'link', to: '/loan-calculator', label: 'Loan Calculator', icon: Calculator },
+      { type: 'link', to: '/investment-tracker', label: 'Investment Tracker', icon: LineChart },
+      { type: 'link', to: '/retirement-planner', label: 'Retirement Planner', icon: PiggyBank },
+      { type: 'link', to: '/financial-statement', label: 'Financial Statement', icon: FileText },
     ],
   },
 ]

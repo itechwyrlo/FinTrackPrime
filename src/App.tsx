@@ -7,6 +7,7 @@ import { FullPageSpinner } from './components/FullPageSpinner'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { BankLinkCallbackPage } from './pages/BankLinkCallbackPage'
 import { BudgetPlannerPage } from './pages/BudgetPlannerPage'
 import { CashFlowPage } from './pages/CashFlowPage'
 import { UpgradePage } from './pages/UpgradePage'
@@ -34,6 +35,11 @@ function AppRoutes() {
       {import.meta.env.DEV && <Route path="/style-guide" element={<StyleGuidePage />} />}
 
       <Route element={<ProtectedRoute />}>
+        {/* Outside AppLayout on purpose: this is a brief transitional
+            screen reached only via Finverse's redirect, not a page a
+            user navigates to from the sidebar. */}
+        <Route path="/bank-link/callback" element={<BankLinkCallbackPage />} />
+
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/budget-planner" element={<BudgetPlannerPage />} />
@@ -43,7 +49,7 @@ function AppRoutes() {
           <Route
             path="/loan-calculator"
             element={
-              <PremiumRoute tool="LoanCalculator">
+              <PremiumRoute>
                 <LoanCalculatorPage />
               </PremiumRoute>
             }
@@ -51,7 +57,7 @@ function AppRoutes() {
           <Route
             path="/investment-tracker"
             element={
-              <PremiumRoute tool="InvestmentTracker">
+              <PremiumRoute>
                 <InvestmentTrackerPage />
               </PremiumRoute>
             }
@@ -59,7 +65,7 @@ function AppRoutes() {
           <Route
             path="/retirement-planner"
             element={
-              <PremiumRoute tool="RetirementPlanner">
+              <PremiumRoute>
                 <RetirementPlannerPage />
               </PremiumRoute>
             }
@@ -67,7 +73,7 @@ function AppRoutes() {
           <Route
             path="/financial-statement"
             element={
-              <PremiumRoute tool="FinancialStatement">
+              <PremiumRoute>
                 <FinancialStatementPage />
               </PremiumRoute>
             }

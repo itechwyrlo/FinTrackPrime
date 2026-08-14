@@ -18,8 +18,13 @@ import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SkeletonChart } from '../components/ui/Skeleton'
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+// currency comes from the API response (CashFlowViewModel.currency) —
+// whichever currency has the most transactions, not a hardcoded guess.
+// Previously this always formatted as USD regardless of what the
+// underlying accounts actually held (HKD, SGD, ...), which was wrong
+// even before multi-currency handling existed on the backend.
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount)
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -70,14 +75,21 @@ export function CashFlowPage() {
       <CardHeader title="Cash Flow Dashboard" description="Built from the same transactions behind your account dashboard." />
 
       <div className="grid gap-5 sm:grid-cols-3">
-        <StatCard label="Total income" value={formatCurrency(data.totalIncome)} />
-        <StatCard label="Total expenses" value={formatCurrency(data.totalExpenses)} />
+        <StatCard label={`Total income (${data.currency})`} value={formatCurrency(data.totalIncome, data.currency)} />
+        <StatCard label={`Total expenses (${data.currency})`} value={formatCurrency(data.totalExpenses, data.currency)} />
         <StatCard
           label="Net"
-          value={formatCurrency(data.net)}
+          value={formatCurrency(data.net, data.currency)}
           trend={{ direction: data.net < 0 ? 'down' : 'up', label: data.net < 0 ? 'Negative this period' : 'Positive this period' }}
         />
       </div>
+
+      {data.otherCurrencies.length > 0 && (
+        <p className="mt-3 text-xs text-text-muted">
+          Also holds accounts in{' '}
+          {data.otherCurrencies.map((c) => c.currency).join(', ')} — not converted or included in the totals above.
+        </p>
+      )}
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <Card>
@@ -91,7 +103,7 @@ export function CashFlowPage() {
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }} />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value), data.currency)} />
                   <Bar dataKey="amount" fill="var(--color-chart-series-1)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -110,7 +122,7 @@ export function CashFlowPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }} />
                   <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }} />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value), data.currency)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="Income" stroke="var(--color-chart-series-1)" strokeWidth={2} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="Expenses" stroke="var(--color-chart-series-2)" strokeWidth={2} dot={{ r: 3 }} />

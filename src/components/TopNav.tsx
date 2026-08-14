@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Bell, Download, LogOut, Menu, Plus, Search } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Bell, Download, Landmark, LogOut, Menu, RefreshCw, Search, Unlink } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
+import { useBankLink } from '../hooks/useBankLink'
+import { notificationsApi } from '../api/notifications'
 import { findBreadcrumbTrail } from '../config/navConfig'
 import type { AccountViewModel } from '../types/api'
 import { Breadcrumbs } from './ui/Breadcrumbs'
@@ -11,10 +14,8 @@ import { Button } from './ui/Button'
 import { DropdownMenu } from './ui/DropdownMenu'
 import { Avatar } from './ui/Avatar'
 import { ThemeToggle } from './ui/ThemeToggle'
-import { EmptyState } from './ui/EmptyState'
 import { SearchPalette } from './SearchPalette'
-import { CreateAccountModal } from './CreateAccountModal'
-import { AddTransactionModal } from './AddTransactionModal'
+import { NotificationList } from './NotificationList'
 
 interface TopNavProps {
   onOpenMobileSidebar: () => void
@@ -28,9 +29,9 @@ export function TopNav({ onOpenMobileSidebar, accounts }: TopNavProps) {
   const trail = findBreadcrumbTrail(location.pathname)
   const pageTitle = trail[trail.length - 1]?.label ?? 'FinTrack Prime'
 
+  const { connect, sync, disconnectAll } = useBankLink()
   const [searchOpen, setSearchOpen] = useState(false)
-  const [createAccountOpen, setCreateAccountOpen] = useState(false)
-  const [addTransactionOpen, setAddTransactionOpen] = useState(false)
+  const { data: notifications } = useQuery({ queryKey: ['notifications'], queryFn: () => notificationsApi.list() })
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -68,17 +69,35 @@ export function TopNav({ onOpenMobileSidebar, accounts }: TopNavProps) {
         <IconButton icon={<Search className="h-4 w-4" />} label="Search" variant="ghost" onClick={() => setSearchOpen(true)} className="sm:hidden" />
 
         <DropdownMenu
-          trigger={<IconButton icon={<Plus className="h-4 w-4" />} label="Quick actions" variant="secondary" />}
+          trigger={<IconButton icon={<Landmark className="h-4 w-4" />} label="Bank connections" variant="secondary" />}
           items={[
-            { label: 'Add transaction', onSelect: () => setAddTransactionOpen(true) },
-            { label: 'Create account', onSelect: () => setCreateAccountOpen(true) },
+            { label: 'Connect a bank', icon: <Landmark className="h-4 w-4" />, onSelect: () => connect.mutate() },
+            { label: 'Sync accounts', icon: <RefreshCw className="h-4 w-4" />, onSelect: () => sync.mutate() },
+            {
+              label: 'Disconnect all banks',
+              icon: <Unlink className="h-4 w-4" />,
+              onSelect: () => {
+                if (window.confirm('Disconnect all linked banks? This removes every linked account and its transactions.')) {
+                  disconnectAll.mutate()
+                }
+              },
+            },
           ]}
         />
 
         <DropdownMenu
-          trigger={<IconButton icon={<Bell className="h-4 w-4" />} label="Notifications" variant="ghost" />}
+          trigger={
+            <span className="relative inline-flex">
+              <IconButton icon={<Bell className="h-4 w-4" />} label="Notifications" variant="ghost" />
+              {(notifications?.unreadCount ?? 0) > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-semibold text-white">
+                  {notifications!.unreadCount > 9 ? '9+' : notifications!.unreadCount}
+                </span>
+              )}
+            </span>
+          }
           items={[]}
-          header={<EmptyState title="No notifications yet" />}
+          header={<NotificationList />}
         />
 
         {isInstallable && (
@@ -106,8 +125,6 @@ export function TopNav({ onOpenMobileSidebar, accounts }: TopNavProps) {
       </div>
 
       <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} accounts={accounts} />
-      <CreateAccountModal open={createAccountOpen} onOpenChange={setCreateAccountOpen} />
-      <AddTransactionModal open={addTransactionOpen} onOpenChange={setAddTransactionOpen} />
     </header>
   )
 }

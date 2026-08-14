@@ -23,9 +23,7 @@ function NavLeafLink({
   collapsed: boolean
   onNavigate?: () => void
 }) {
-  const { user } = useAuth()
   const Icon = item.icon
-  const isUnlocked = item.premiumTool ? (user?.unlockedTools?.includes(item.premiumTool) ?? false) : true
 
   return (
     <NavLink
@@ -41,33 +39,60 @@ function NavLeafLink({
       }
     >
       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-      {!collapsed && (
-        <span className="flex flex-1 items-center justify-between gap-2 overflow-hidden whitespace-nowrap">
-          {item.label}
-          {item.premiumTool && (
-            <span className={isUnlocked ? 'text-emerald-400' : 'text-white/30'}>
-              {isUnlocked ? '✓' : <Lock className="h-3.5 w-3.5" />}
-            </span>
-          )}
-        </span>
-      )}
+      {!collapsed && <span className="flex-1 overflow-hidden whitespace-nowrap">{item.label}</span>}
+    </NavLink>
+  )
+}
+
+// Premium is a single all-tools purchase: while locked, the whole group
+// collapses into one "Premium tools" link straight to the paywall
+// instead of listing the four tools individually — clicking any of
+// them, locked, means exactly the same thing right now. Once unlocked
+// it expands into the real per-tool links.
+function LockedPremiumGroupLink({
+  label,
+  collapsed,
+  onNavigate,
+}: {
+  label: string
+  collapsed: boolean
+  onNavigate?: () => void
+}) {
+  return (
+    <NavLink
+      to="/upgrade"
+      onClick={onNavigate}
+      title={collapsed ? label : undefined}
+      className={({ isActive }) =>
+        cn(
+          'flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
+          collapsed && 'justify-center px-0',
+          isActive ? 'border-ft-gold bg-white/5 text-ft-gold' : 'border-transparent text-white/60 hover:bg-white/5',
+        )
+      }
+    >
+      <Lock className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+      {!collapsed && <span className="flex-1 overflow-hidden whitespace-nowrap">{label}</span>}
     </NavLink>
   )
 }
 
 function SidebarNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const { user } = useAuth()
-  const unlockedCount = user?.unlockedTools?.length ?? 0
-  const premiumTotal = NAV_CONFIG.filter((item) => item.type === 'group').flatMap((group) =>
-    group.type === 'group' ? group.items : [],
-  ).length
+  const premiumUnlocked = user?.premiumUnlocked ?? false
 
   return (
     <nav className="flex flex-col gap-1" aria-label="Main navigation">
-      {NAV_CONFIG.map((item) =>
-        item.type === 'link' ? (
-          <NavLeafLink key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
-        ) : (
+      {NAV_CONFIG.map((item) => {
+        if (item.type === 'link') {
+          return <NavLeafLink key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
+        }
+
+        if (item.premiumGated && !premiumUnlocked) {
+          return <LockedPremiumGroupLink key={item.label} label={item.label} collapsed={collapsed} onNavigate={onNavigate} />
+        }
+
+        return (
           <div key={item.label} className="mt-4">
             {!collapsed && (
               <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-white/40">{item.label}</p>
@@ -76,32 +101,26 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?
               {item.items.map((sub) => sub.type === 'link' && <NavLeafLink key={sub.to} item={sub} collapsed={collapsed} onNavigate={onNavigate} />)}
             </div>
           </div>
-        ),
-      )}
+        )
+      })}
 
-      <NavLink
-        to={UPGRADE_ITEM.to}
-        onClick={onNavigate}
-        title={collapsed ? UPGRADE_ITEM.label : undefined}
-        className={({ isActive }) =>
-          cn(
-            'mt-3 flex items-center gap-3 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
-            collapsed && 'justify-center px-0',
-            isActive ? 'border-ft-gold/50 bg-ft-gold/10 text-ft-gold' : 'border-ft-gold/30 text-ft-gold/80 hover:bg-ft-gold/10',
-          )
-        }
-      >
-        <UPGRADE_ITEM.icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-        {!collapsed && (
-          <span className="overflow-hidden whitespace-nowrap">
-            {unlockedCount === 0
-              ? 'Unlock Premium'
-              : unlockedCount === premiumTotal
-                ? 'All tools unlocked ✓'
-                : `${unlockedCount}/${premiumTotal} tools unlocked`}
-          </span>
-        )}
-      </NavLink>
+      {!premiumUnlocked && (
+        <NavLink
+          to={UPGRADE_ITEM.to}
+          onClick={onNavigate}
+          title={collapsed ? UPGRADE_ITEM.label : undefined}
+          className={({ isActive }) =>
+            cn(
+              'mt-3 flex items-center gap-3 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+              collapsed && 'justify-center px-0',
+              isActive ? 'border-ft-gold/50 bg-ft-gold/10 text-ft-gold' : 'border-ft-gold/30 text-ft-gold/80 hover:bg-ft-gold/10',
+            )
+          }
+        >
+          <UPGRADE_ITEM.icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+          {!collapsed && <span className="overflow-hidden whitespace-nowrap">Unlock Premium</span>}
+        </NavLink>
+      )}
     </nav>
   )
 }
